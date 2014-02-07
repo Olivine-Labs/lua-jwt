@@ -1,13 +1,13 @@
 local meta = {}
-require 'hmac.sha2'
+local crypto = require 'crypto'
 local basexx  = require 'basexx'
 local json    = require 'cjson'
 
 local data = {
   alg_type = {
-    ['HS256'] = hmac.sha256,
-    ['HS384'] = hmac.sha384,
-    ['HS512'] = hmac.sha512,
+    ['HS256'] = function(data, key) return crypto.hmac.digest('sha256', data, key) end,
+    ['HS384'] = function(data, key) return crypto.hmac.digest('sha384', data, key) end,
+    ['HS512'] = function(data, key) return crypto.hmac.digest('sha512', data, key) end,
     ['none']  = function(data) return data end,
   },
 }

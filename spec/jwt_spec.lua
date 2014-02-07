@@ -37,7 +37,5 @@ describe("JWT spec", function()
     local token = jwt.encode(claims, "HS256", "key")
     local decodedClaims = jwt.decode(token, "key")
     assert.are.same(claims, decodedClaims)
-    local cftoken = "eyJhbGciOiJIUzI1NiJ9.eyJqdGkiOiIzZTE5ZGQwZC0wMTliLTRlNGUtYTYxYy0wOWZhZDk1M2IzYmMiLCJzdWIiOiIzYWM0MDBjYy0wMTczLTQ2NjQtYmI5ZS1iMzhjM2ZhMzhlYTEiLCJzY29wZSI6WyJwYXNzd29yZC53cml0ZSJdLCJjbGllbnRfaWQiOiJjbG91ZF9jb250cm9sbGVyIiwiY2lkIjoiY2xvdWRfY29udHJvbGxlciIsImdyYW50X3R5cGUiOiJwYXNzd29yZCIsInVzZXJfaWQiOiIzYWM0MDBjYy0wMTczLTQ2NjQtYmI5ZS1iMzhjM2ZhMzhlYTEiLCJ1c2VyX25hbWUiOiJtYXJpc3NhIiwiZW1haWwiOiJtYXJpc3NhQHRlc3Qub3JnIiwiaWF0IjoxMzkxNzMzNjMzLCJleHAiOjEzOTE3NzY4MzMsImlzcyI6Imh0dHA6Ly9sb2NhbGhvc3Q6ODA4MC91YWEvb2F1dGgvdG9rZW4iLCJhdWQiOlsicGFzc3dvcmQiXX0.XAElepDpAsu2Zo_1Ztifb-RvmvFplMEyuKO5nYzYIXU"
-    error(require 'cjson'.encode(jwt.decode(cftoken)))
   end)
 end)
