@@ -32,7 +32,6 @@ end
 
 function data.encode(claims, alg, alg_key)
   if alg and not data.alg_type[alg] then return nil, "Parameter 2 must be a registered MAC algorithm" end
-  if alg and not alg_key then return nil, "Parameter 3 must be a string key" end
   local header    = json.encode(header(mac, enc))
   local claims    = json.encode(claims)
   local signature = nil
