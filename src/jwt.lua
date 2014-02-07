@@ -1,6 +1,5 @@
 local meta = {}
 require 'hmac.sha2'
-local crypto  = require 'crypto'
 local basexx  = require 'basexx'
 local json    = require 'cjson'
 
