@@ -34,8 +34,38 @@ describe("JWT spec", function()
     local claims = {
       test = "test",
     }
-    local token = jwt.encode(claims, "HS256", "key")
-    local decodedClaims = jwt.decode(token, "key")
+    local token = jwt.encode(claims, {alg = "HS256", keys = {private = "key"}})
+    local decodedClaims = jwt.decode(token, {keys = {public = "key"}})
     assert.are.same(claims, decodedClaims)
+  end)
+
+  it("it cannot encode/decode a signed plain text token with alg=HS256 and an incorrect key", function()
+    local claims = {
+      test = "test",
+    }
+    local token = jwt.encode(claims, {alg = "HS256", keys = {private = "key"}})
+    local decodedClaims = jwt.decode(token, {keys = {public = "notthekey"}})
+    assert.has_error(function() assert.are.same(claims, decodedClaims) end)
+  end)
+
+  it("it can encode/decode a signed plain text token with alg=RS256", function()
+    local claims = {
+      test = "test",
+    }
+    local keyPair = crypto.pkey.generate("rsa", 512)
+    local token, err = jwt.encode(claims, {alg = "RS256", keys = {private = keyPair}})
+    local decodedClaims = jwt.decode(token, {keys = {public = keyPair}})
+    assert.are.same(claims, decodedClaims)
+  end)
+
+  it("it cannot encode/decode a signed plain text token with alg=RS256 and an incorrect key", function()
+    local claims = {
+      test = "test",
+    }
+    local keyPair = crypto.pkey.generate("rsa", 512)
+    local badPair = crypto.pkey.generate("rsa", 512)
+    local token = jwt.encode(claims, {alg = "RS256", keys = {private = keyPair}})
+    local decodedClaims = jwt.decode(token, {keys = {public = badPair}})
+    assert.has_error(function() assert.are.same(claims, decodedClaims) end)
   end)
 end)
