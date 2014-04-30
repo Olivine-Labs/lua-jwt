@@ -1,5 +1,5 @@
 package = "jwt"
-version = "0.1-4"
+version = "0.1-5"
 source = {
   url = "https://github.com/Olivine-Labs/lua-jwt/archive/v0.1.tar.gz",
   dir = "lua-jwt-0.1"
@@ -15,6 +15,7 @@ dependencies = {
   "lua >= 5.1",
   "busted >= 1.7-1",
   "luacrypto >= 0.3.2-1",
+  "basexx >= 0.1.0-1"
 }
 build = {
   type = "builtin",
