@@ -45,7 +45,7 @@ function data.encode(claims, options)
   local header    = header(options)
   local token, err = jwt:encode(header, claims, options)
   if not token then return nil, err end
-  return token
+  return token:gsub('+','-'):gsub('/','_')
 end
 
 function data.decode(str, options)

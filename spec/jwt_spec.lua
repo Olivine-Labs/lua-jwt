@@ -58,6 +58,16 @@ describe("JWT spec", function()
     assert.are.same(claims, decodedClaims)
   end)
 
+  it("it cannot decode a token without a signature but with a key specified", function()
+    local claims = {
+      test = "test",
+    }
+    local keyPair = crypto.pkey.generate("rsa", 512)
+    local token, err = jwt.encode(claims, {alg = "RS256"})
+    local decodedClaims = jwt.decode(token, {keys = {public = keyPair}})
+    assert.are.same(decodedClaims, nil)
+  end)
+
   it("it cannot encode/decode a signed plain text token with alg=RS256 and an incorrect key", function()
     local claims = {
       test = "test",
@@ -68,6 +78,7 @@ describe("JWT spec", function()
     local decodedClaims = jwt.decode(token, {keys = {public = badPair}})
     assert.has_error(function() assert.are.same(claims, decodedClaims) end)
   end)
+
   it("can verify a signature", function()
     local token = "eyJhbGciOiJSUzI1NiJ9.eyJqdGkiOiJhOGZjZTFkZi1iNGFlLTRjNDEtYmFjNi1iNWJiZjI4MGMyOWMiLCJzdWIiOiI3YmZjNThlYy03N2RkLTQ4NzQtYmViZC1iYTg0MTAzMDEyNzkiLCJzY29wZSI6WyJvYXV0aC5hcHByb3ZhbHMiLCJvcGVuaWQiXSwiY2xpZW50X2lkIjoibG9naW4iLCJjaWQiOiJsb2dpbiIsImdyYW50X3R5cGUiOiJwYXNzd29yZCIsInVzZXJfaWQiOiI3YmZjNThlYy03N2RkLTQ4NzQtYmViZC1iYTg0MTAzMDEyNzkiLCJ1c2VyX25hbWUiOiJhZG1pbkBmb3Jpby5jb20iLCJlbWFpbCI6ImFkbWluQGZvcmlvLmNvbSIsImlhdCI6MTM5ODkwNjcyNywiZXhwIjoxMzk4OTQ5OTI3LCJpc3MiOiJodHRwOi8vbG9jYWxob3N0Ojk3NjMvdWFhL29hdXRoL3Rva2VuIiwiYXVkIjpbIm9hdXRoIiwib3BlbmlkIl19.xOa5ZpXksgoaA_XJ3yHMjlLcbSoM6XJy-e60zfyP7bRmu0EKEGZdZrl2iJVh6OTIn8z6UuvcY282C1A5LtRgpir4wqhIrphd-Mi9gfxra0pJvtydd4XqVpuNdW7GDaC43VXpvUtetmfn-YAo2jkD9G22mUuT2sFdt5NqFL7Rk4tVRILes73OWxfQpuoReWvRBik-sJXxC9ADmTuzR36OvomIrso42R8aufU2ku_zPve8IhYLvn3vHmYCt0zNZkX-jSV8YtGodr9V-dKs9na41YvGp2UxkBcV7LKoGSRELSSNJ8JLF-bjO3zYSSbT42-yeHeKfoWAeP6R7S_0c_AYRA"
     local key = [[-----BEGIN PUBLIC KEY-----

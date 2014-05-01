@@ -25,9 +25,13 @@ function data:encode(header, claims, options)
   if not options then error("options are required") end
   local claims    = json.encode(claims)
   local envelope  = basexx.to_base64(json.encode(header)).."."..basexx.to_base64(claims)
-  local signature, err = self.sign[header.alg](envelope, options.keys.private)
-  if not signature then return nil, err end
-  return envelope .. "." .. basexx.to_base64(signature)
+  local signature
+  if options.keys then
+    local err
+    signature, err = self.sign[header.alg](envelope, options.keys.private)
+    if not signature then return nil, err end
+  end
+  return envelope .. "." .. (signature and basexx.to_base64(signature) or "")
 end
 
 function data:decode(header, str, options)
@@ -43,6 +47,9 @@ function data:decode(header, str, options)
       signature     = basexx.from_base64(str:sub(dotSecond+1))
     end
   else
+    if options and options.keys and options.keys.public then
+      return nil, "Invalid token"
+    end
     bodyStr = str
   end
 
