@@ -32,7 +32,10 @@ function data:decode(header, str, options)
   local bodyStr
   if dotFirst then
     bodyStr       = str:sub(1, dotFirst)
-    signature     = basexx.from_base64(str:sub(dotFirst+1))
+    if options and options.keys then
+      local sig     = str:sub(dotFirst+1)
+      signature     = basexx.from_base64(sig)
+    end
   else
     bodyStr = str
   end
