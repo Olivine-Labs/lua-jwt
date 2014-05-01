@@ -20,6 +20,9 @@ dependencies = {
 build = {
   type = "builtin",
   modules = {
-    ["jwt"]  = "src/jwt.lua"
+    ["jwt"]       = "src/jwt.lua"
+    ["jwt.jws"]   = "src/jwt/jws.lua"
+    ["jwt.jwe"]   = "src/jwt/jwe.lua"
+    ["jwt.plain"] = "src/jwt/plain.lua"
   }
 }
