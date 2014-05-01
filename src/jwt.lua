@@ -42,19 +42,20 @@ end
 
 function data.encode(claims, options)
   local jwt       = getJwt(options)
-  local header    = basexx.to_base64(json.encode(header(options)))
-  local body, err = jwt:encode(claims, options)
-  if not body then return nil, err end
-  return header.."."..body
+  local header    = header(options)
+  local token, err = jwt:encode(header, claims, options)
+  if not token then return nil, err end
+  return token
 end
 
 function data.decode(str, options)
   if not str then return nil, "Parameter 1 cannot be nil" end
   local dotFirst = str:find("%.")
   if not dotFirst then return nil, "Invalid token" end
-  local header = json.decode(basexx.from_base64(str:sub(1, dotFirst)))
+  str = str:gsub('-','+'):gsub('_','/')
+  local header = json.decode((basexx.from_base64(str:sub(1,dotFirst-1))))
 
-  return getJwt(header):decode(header, str:sub(dotFirst+1), options)
+  return getJwt(header):decode(header, str, options)
 end
 
 function meta:__newindex(key)
