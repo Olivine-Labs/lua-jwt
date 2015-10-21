@@ -11,14 +11,6 @@ describe("JWT spec", function()
     assert(token["http://example.com/is_root"] == true)
   end)
 
-  it("can decode a plain text token with an extra dot", function()
-    local token, msg = jwt.decode(plainJwt..".")
-    assert(token or error(msg))
-    assert(token.iss == "joe")
-    assert(token.exp == 1300819380)
-    assert(token["http://example.com/is_root"] == true)
-  end)
-
   it("can encode a plain text token", function()
     local claim = {
       iss = "joe",
@@ -93,5 +85,12 @@ EQIDAQAB
 
     local claims = jwt.decode(token, {keys={public=key}})
     assert(claims)
+  end)
+
+  it("Is not fooled by modified tokens that claim to be unsigned", function()
+    local encoded = 'eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJpc3MiOiJodHRwczovL2p3dC1pZHAuZXhhbXBsZS5jb20iLCJzdWIiOiJtYWlsdG86bWlrZUBleGFtcGxlLmNvbSIsIm5iZiI6MTQ0NTQ3MDA3MywiZXhwIjoxNDQ1NDczNjczLCJpYXQiOjE0NDU0NzAwNzMsImp0aSI6ImlkMTIzNDU2IiwidHlwIjoiaHR0cHM6Ly9leGFtcGxlLmNvbS9yZWdpc3RlciJ9.NEbef_xsCzaLMU0Oh-Q_XLQyvF25vSIGlCcupi5-us05HFNhbTG7_2ElRmn0ew4DCBssT14GEU_8TjtcdmBkta7gCqKLF7X07UASVkL7lS_6VAu8lHGD4U4N-35AByu5gO2RQf5V3tt5WSpv2qABF4R_msF_qjZ8Ii8o_Fth6YxH6eDFgNAOCWwWwB3hvK2mJ6te9ZK04C00qc1U4xOFdO8geXaW7ohoXBCv1h8VT7sbsmyZ14ce6ASliHVCGjoXyXRGfFMQPKdJ5t4x_pSdH85MQn08nsYXIPCzMo3Fl2lFJyKbXLl3pMF1pwKpKpSxoCjbsWcjot1RmzpLbTcvfg'
+    local token, err = jwt.decode(encoded)
+    assert(not token)
+    assert(err ~= nil)
   end)
 end)
