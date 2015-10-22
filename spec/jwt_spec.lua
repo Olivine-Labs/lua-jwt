@@ -1,6 +1,7 @@
 describe("JWT spec", function()
 
   local jwt = require 'jwt'
+  local crypto = require 'crypto'
   local plainJwt = "eyJhbGciOiJub25lIn0.eyJpc3MiOiJqb2UiLA0KICJleHAiOjEzMDA4MTkzODAsDQogImh0dHA6Ly9leGFtcGxlLmNvbS9pc19yb290Ijp0cnVlfQ"
 
   it("can decode a plain text token", function()
@@ -50,16 +51,6 @@ describe("JWT spec", function()
     assert.are.same(claims, decodedClaims)
   end)
 
-  it("it cannot decode a token without a signature but with a key specified", function()
-    local claims = {
-      test = "test",
-    }
-    local keyPair = crypto.pkey.generate("rsa", 512)
-    local token, err = jwt.encode(claims, {alg = "RS256"})
-    local decodedClaims = jwt.decode(token, {keys = {public = keyPair}})
-    assert.are.same(decodedClaims, nil)
-  end)
-
   it("it cannot encode/decode a signed plain text token with alg=RS256 and an incorrect key", function()
     local claims = {
       test = "test",
@@ -92,5 +83,33 @@ EQIDAQAB
     local token, err = jwt.decode(encoded)
     assert(not token)
     assert(err ~= nil)
+  end)
+
+  it("can encode and decode rs256", function()
+    local keys = {
+      private = crypto.pkey.from_pem(
+[[-----BEGIN RSA PRIVATE KEY-----
+MIIBOwIBAAJBANfnFz7xPmYVdJxZE7sQ5quh/XUzB5y/D5z2A7KPYXUgUP0jd5yL
+Z7+pVBcFSUm5AZXJLXH4jPVOXztcmiu4ta0CAwEAAQJBAJYXWNmw7Cgbkk1+v3C0
+dyeqHYF0UD5vtHLxs/BWLPI2lZO0e6ixFNI4uIuatBox1Zbzt1TSy8T09Slt4tNL
+CAECIQD6PHDGtKXcI2wUSvh4y8y7XfvwlwRPU2AzWZ1zvOCbbQIhANzgMpUNOZL2
+vakju4sal1yZeXUWO8FurmsAyotAx9tBAiB2oQKh4PAkXZKWSDhlI9CqHtMaaq17
+Yb5geaKARNGCPQIgILYrh5ufzT4xtJ0QJ3fWtuYb8NVMIEeuGTbSyHDdqIECIQDZ
+3LNCyR2ykwetc6KqbQh3W4VkuatAQgMv5pNdFLrfmg==
+-----END RSA PRIVATE KEY-----]], true),
+      public = crypto.pkey.from_pem(
+[[-----BEGIN PUBLIC KEY-----
+MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBANfnFz7xPmYVdJxZE7sQ5quh/XUzB5y/
+D5z2A7KPYXUgUP0jd5yLZ7+pVBcFSUm5AZXJLXH4jPVOXztcmiu4ta0CAwEAAQ==
+-----END PUBLIC KEY-----]], false),
+    }
+    local claims = {
+      test = "test",
+      longClaim = "iubvn1oubv91henvicuqnw93bn19u  ndij npkhabsdvlb23iou4bijbandlivubhql3ubvliuqwdbnvliuqwhv9ulqbhiulbiluabsdvuhbq9urbv9ubqubxuvbu9qbdshvuhqniuhv9uhbfq9uhr89hqu9ebnv9uqhu9rbvp9843$#BVCo²¸´no414i"
+    }
+    local token = jwt.encode(claims, {alg = "RS256", keys = keys})
+    local decodedClaims, err = jwt.decode(token, {keys = keys})
+    if not decodedClaims then error(err) end
+    assert.are.same(claims, decodedClaims)
   end)
 end)
