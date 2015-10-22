@@ -53,6 +53,9 @@ function data.decode(str, options)
   local dotFirst = str:find("%.")
   if not dotFirst then return nil, "Invalid token" end
   str = str:gsub('-','+'):gsub('_','/')
+  local mod = #str % 3
+  if mod == 1 then str = str..'='
+  elseif mod == 2 then str = str..'==' end
   local header = json.decode((basexx.from_base64(str:sub(1,dotFirst-1))))
 
   return getJwt(header):decode(header, str, options)
