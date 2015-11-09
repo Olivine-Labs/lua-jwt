@@ -21,17 +21,13 @@ data.verify = {
   end,
 }
 
-local function urlSafe(base64)
-  return base64:gsub('+','-'):gsub('/','_'):gsub('=','')
-end
-
 function data:encode(header, claims, options)
   if not options then error("options are required") end
   if not options.keys then error("keys are required") end
-  local envelope  = urlSafe(basexx.to_base64(json.encode(header)).."."..basexx.to_base64(json.encode(claims)))
+  local envelope  = basexx.to_url64(json.encode(header)).."."..basexx.to_url64(json.encode(claims))
   local signature, err = self.sign[header.alg](envelope, options.keys.private)
   if not signature then error('failed to generate signature') end
-  return envelope ..'.'..urlSafe(basexx.to_base64(signature))
+  return envelope ..'.'..basexx.to_url64(signature)
 end
 
 function data:decode(header, str, options)
@@ -44,7 +40,7 @@ function data:decode(header, str, options)
   if dotSecond then
     bodyStr       = str:sub(1, dotSecond-1)
     if options and options.keys and options.keys.public then
-      signature     = basexx.from_base64(str:sub(dotSecond+1))
+      signature     = basexx.from_url64(str:sub(dotSecond+1))
     end
   else
     if options and options.keys and options.keys.public then
@@ -53,9 +49,9 @@ function data:decode(header, str, options)
     bodyStr = str
   end
 
-  local message = basexx.from_base64(bodyStr)
+  local message = basexx.from_url64(bodyStr)
   if signature then
-    if not self.verify[header.alg](urlSafe(rawHeader).."."..urlSafe(bodyStr), signature, options.keys.public) then
+    if not self.verify[header.alg](rawHeader.."."..bodyStr, signature, options.keys.public) then
       return nil, "Invalid token"
     end
   end

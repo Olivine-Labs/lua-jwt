@@ -52,8 +52,7 @@ function data.decode(str, options)
   if not str then return nil, "Parameter 1 cannot be nil" end
   local dotFirst = str:find("%.")
   if not dotFirst then return nil, "Invalid token" end
-  str = str:gsub('-','+'):gsub('_','/')
-  local header = json.decode((basexx.from_base64(str:sub(1,dotFirst-1))))
+  local header = json.decode((basexx.from_url64(str:sub(1,dotFirst-1))))
 
   return getJwt(header):decode(header, str, options)
 end

@@ -4,7 +4,7 @@ local json    = require 'cjson'
 local data    = {}
 
 function data:encode(header, claims)
-  return basexx.to_base64(json.encode(claims))
+  return basexx.to_url64(json.encode(claims))
 end
 
 function data:decode(header, str, options)
@@ -13,7 +13,7 @@ function data:decode(header, str, options)
   str = str:sub(dotFirst+1)
   local dotSecond = str:find("%.")
   if dotSecond then return nil, 'Invalid Token, alg=none but has signature' end
-  return json.decode(basexx.from_base64(str))
+  return json.decode(basexx.from_url64(str))
 end
 
 return data
