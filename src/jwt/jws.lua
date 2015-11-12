@@ -1,5 +1,6 @@
 local basexx  = require 'basexx'
 local json    = require 'cjson'
+json.encode_empty_table('array')
 local crypto  = require 'crypto'
 
 local data    = {}
