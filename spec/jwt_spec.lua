@@ -44,6 +44,7 @@ describe("JWT spec", function()
   it("it can encode/decode a signed plain text token with alg=RS256", function()
     local claims = {
       test = "test",
+      empty={},
     }
     local keyPair = crypto.pkey.generate("rsa", 512)
     local token, err = jwt.encode(claims, {alg = "RS256", keys = {private = keyPair}})

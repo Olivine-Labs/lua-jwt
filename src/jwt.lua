@@ -1,7 +1,8 @@
 local meta    = {}
 local data    = {}
 
-local json    = require 'resty.libcjson'
+local json    = require 'cjson'
+json.encode_empty_table('array')
 local basexx  = require 'basexx'
 local jws     = require 'jwt.jws'
 local jwe     = require 'jwt.jwe'
