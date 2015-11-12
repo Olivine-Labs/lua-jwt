@@ -1,5 +1,5 @@
 package = "jwt"
-version = "0.5-1"
+version = "0.5-2"
 source = {
   url = "https://github.com/Olivine-Labs/lua-jwt/archive/v0.5.tar.gz",
   dir = "lua-jwt-0.5"
