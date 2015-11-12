@@ -1,5 +1,5 @@
 local basexx  = require 'basexx'
-local json    = require 'cjson'
+local json    = require 'resty.libcjson'
 local crypto  = require 'crypto'
 
 local data    = {}
