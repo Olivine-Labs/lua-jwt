@@ -1,24 +1,38 @@
 local basexx  = require 'basexx'
 local json    = require 'cjson'
 json.encode_empty_table('array')
-local crypto  = require 'crypto'
+local digest  = require 'openssl.digest'
+local hmac    = require 'openssl.hmac'
+local pkey    = require 'openssl.pkey'
 
 local data    = {}
 
+local function tohex(s)
+  local result = ""
+  for i = 1, #s do
+    result = result..string.format("%.2x", string.byte(s, i))
+  end
+  return result
+end
+
 data.sign = {
-  ['HS256'] = function(data, key) return crypto.hmac.digest('sha256', data, key) end,
-  ['HS384'] = function(data, key) return crypto.hmac.digest('sha384', data, key) end,
-  ['HS512'] = function(data, key) return crypto.hmac.digest('sha512', data, key) end,
-  ['RS256'] = function(data, key) return crypto.sign("sha256", data, key) end,
+  ['HS256'] = function(data, key) return tohex(hmac.new(key, 'sha256'):final (data)) end,
+  ['HS384'] = function(data, key) return tohex(hmac.new(key, 'sha384'):final (data)) end,
+  ['HS512'] = function(data, key) return tohex(hmac.new(key, 'sha512'):final (data)) end,
+  ['RS256'] = function(data, key) return key:sign(digest.new('sha256'):update(data)) end,
 }
 
 data.verify = {
-  ['HS256'] = function(data, signature, key) return signature == crypto.hmac.digest('sha256', data, key) end,
-  ['HS384'] = function(data, signature, key) return signature == crypto.hmac.digest('sha384', data, key) end,
-  ['HS512'] = function(data, signature, key) return signature == crypto.hmac.digest('sha512', data, key) end,
+  ['HS256'] = function(data, signature, key) return signature == tohex(hmac.new (key, 'sha256'):final (data)) end,
+  ['HS384'] = function(data, signature, key) return signature == tohex(hmac.new (key, 'sha384'):final (data)) end,
+  ['HS512'] = function(data, signature, key) return signature == tohex(hmac.new (key, 'sha512'):final (data)) end,
   ['RS256'] = function(data, signature, key)
-    local pubkey = type(key) == "userdata" and key or crypto.pkey.from_pem(key)
-    return crypto.verify("sha256", data, signature, pubkey)
+    local pubkey
+    if type(key) == 'string' then pubkey = pkey.new(key)
+    elseif type(key) == 'table' then pubkey = pkey.new(key.public)
+    elseif type(key) == 'userdata' then pubkey = key
+    end
+    return pubkey:verify(signature, digest.new('sha256'):update(data))
   end,
 }
 

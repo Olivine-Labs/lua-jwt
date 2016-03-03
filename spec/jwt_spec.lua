@@ -1,7 +1,7 @@
 describe("JWT spec", function()
 
-  local jwt = require 'jwt'
-  local crypto = require 'crypto'
+  local jwt  = require 'jwt'
+  local pkey = require 'openssl.pkey'
   local plainJwt = "eyJhbGciOiJub25lIn0.eyJpc3MiOiJqb2UiLA0KICJleHAiOjEzMDA4MTkzODAsDQogImh0dHA6Ly9leGFtcGxlLmNvbS9pc19yb290Ijp0cnVlfQ"
 
   it("can decode a plain text token", function()
@@ -46,7 +46,7 @@ describe("JWT spec", function()
       test = "test",
       empty={},
     }
-    local keyPair = crypto.pkey.generate("rsa", 512)
+    local keyPair = pkey.new{type = "rsa", bits=512}
     local token, err = jwt.encode(claims, {alg = "RS256", keys = {private = keyPair}})
     local decodedClaims = jwt.decode(token, {keys = {public = keyPair}})
     assert.are.same(claims, decodedClaims)
@@ -56,8 +56,8 @@ describe("JWT spec", function()
     local claims = {
       test = "test",
     }
-    local keyPair = crypto.pkey.generate("rsa", 512)
-    local badPair = crypto.pkey.generate("rsa", 512)
+    local keyPair = pkey.new{type="rsa", bits=512}
+    local badPair = pkey.new{type="rsa", bits=512}
     local token = jwt.encode(claims, {alg = "RS256", keys = {private = keyPair}})
     local decodedClaims = jwt.decode(token, {keys = {public = badPair}})
     assert.has_error(function() assert.are.same(claims, decodedClaims) end)
@@ -88,7 +88,7 @@ EQIDAQAB
 
   it("can encode and decode rs256", function()
     local keys = {
-      private = crypto.pkey.from_pem(
+      private = pkey.new(
 [[-----BEGIN RSA PRIVATE KEY-----
 MIIBOwIBAAJBANfnFz7xPmYVdJxZE7sQ5quh/XUzB5y/D5z2A7KPYXUgUP0jd5yL
 Z7+pVBcFSUm5AZXJLXH4jPVOXztcmiu4ta0CAwEAAQJBAJYXWNmw7Cgbkk1+v3C0
@@ -97,12 +97,12 @@ CAECIQD6PHDGtKXcI2wUSvh4y8y7XfvwlwRPU2AzWZ1zvOCbbQIhANzgMpUNOZL2
 vakju4sal1yZeXUWO8FurmsAyotAx9tBAiB2oQKh4PAkXZKWSDhlI9CqHtMaaq17
 Yb5geaKARNGCPQIgILYrh5ufzT4xtJ0QJ3fWtuYb8NVMIEeuGTbSyHDdqIECIQDZ
 3LNCyR2ykwetc6KqbQh3W4VkuatAQgMv5pNdFLrfmg==
------END RSA PRIVATE KEY-----]], true),
-      public = crypto.pkey.from_pem(
+-----END RSA PRIVATE KEY-----]]),
+      public = pkey.new(
 [[-----BEGIN PUBLIC KEY-----
 MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBANfnFz7xPmYVdJxZE7sQ5quh/XUzB5y/
 D5z2A7KPYXUgUP0jd5yLZ7+pVBcFSUm5AZXJLXH4jPVOXztcmiu4ta0CAwEAAQ==
------END PUBLIC KEY-----]], false),
+-----END PUBLIC KEY-----]]),
     }
     local claims = {
       test = "test",
