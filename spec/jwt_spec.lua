@@ -113,4 +113,34 @@ D5z2A7KPYXUgUP0jd5yLZ7+pVBcFSUm5AZXJLXH4jPVOXztcmiu4ta0CAwEAAQ==
     if not decodedClaims then error(err) end
     assert.are.same(claims, decodedClaims)
   end)
+
+  it("does not throw an error when key is invalid in rs256", function()
+    local keys = {
+      private = pkey.new(
+[[-----BEGIN RSA PRIVATE KEY-----
+MIIBOwIBAAJBANfnFz7xPmYVdJxZE7sQ5quh/XUzB5y/D5z2A7KPYXUgUP0jd5yL
+Z7+pVBcFSUm5AZXJLXH4jPVOXztcmiu4ta0CAwEAAQJBAJYXWNmw7Cgbkk1+v3C0
+dyeqHYF0UD5vtHLxs/BWLPI2lZO0e6ixFNI4uIuatBox1Zbzt1TSy8T09Slt4tNL
+CAECIQD6PHDGtKXcI2wUSvh4y8y7XfvwlwRPU2AzWZ1zvOCbbQIhANzgMpUNOZL2
+vakju4sal1yZeXUWO8FurmsAyotAx9tBAiB2oQKh4PAkXZKWSDhlI9CqHtMaaq17
+Yb5geaKARNGCPQIgILYrh5ufzT4xtJ0QJ3fWtuYb8NVMIEeuGTbSyHDdqIECIQDZ
+3LNCyR2ykwetc6KqbQh3W4VkuatAQgMv5pNdFLrfmg==
+-----END RSA PRIVATE KEY-----]]),
+      public = pkey.new(
+[[-----BEGIN PUBLIC KEY-----
+MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBANfnFz7xPmYVdJxZE7sQ5quh/XUzB5y/
+D5z2A7KPYXUgUP0jd5yLZ7+pVBcFSUm5AZXJLXH4jPVOXztcmiu4ta0CAwEAAQ==
+-----END PUBLIC KEY-----]]),
+    }
+    local invalid_key = "a really invalid key"
+    local data = {
+      test = "test",
+    }
+    local token = jwt.encode(data, {alg = "RS256", keys = keys})
+    assert.has.no.error(function ()
+      local result, err = jwt.decode(token, {keys = {public = invalid_key }})
+      assert.is_nil(result)
+      assert.is_not_nil(err)
+    end)
+  end)
 end)

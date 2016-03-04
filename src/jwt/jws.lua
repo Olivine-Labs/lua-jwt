@@ -27,12 +27,16 @@ data.verify = {
   ['HS384'] = function(data, signature, key) return signature == tohex(hmac.new (key, 'sha384'):final (data)) end,
   ['HS512'] = function(data, signature, key) return signature == tohex(hmac.new (key, 'sha512'):final (data)) end,
   ['RS256'] = function(data, signature, key)
-    local pubkey
-    if type(key) == 'string' then pubkey = pkey.new(key)
-    elseif type(key) == 'table' then pubkey = pkey.new(key.public)
-    elseif type(key) == 'userdata' then pubkey = key
-    end
-    return pubkey:verify(signature, digest.new('sha256'):update(data))
+    local ok, result = pcall(function()
+      local pubkey
+      if type(key) == 'string' then pubkey = pkey.new(key)
+      elseif type(key) == 'userdata' then pubkey = key
+      else assert (false)
+      end
+      return pubkey:verify(signature, digest.new('sha256'):update(data))
+    end)
+    if not ok then return nil, result end
+    return result
   end,
 }
 
