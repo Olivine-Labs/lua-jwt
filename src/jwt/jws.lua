@@ -19,7 +19,13 @@ data.sign = {
   ['HS256'] = function(data, key) return tohex(hmac.new(key, 'sha256'):final (data)) end,
   ['HS384'] = function(data, key) return tohex(hmac.new(key, 'sha384'):final (data)) end,
   ['HS512'] = function(data, key) return tohex(hmac.new(key, 'sha512'):final (data)) end,
-  ['RS256'] = function(data, key) return key:sign(digest.new('sha256'):update(data)) end,
+  ['RS256'] = function(data, key)
+    local ok, result = pcall(function()
+      return key:sign(digest.new('sha256'):update(data))
+    end)
+    if not ok then return nil, result end
+    return result
+  end,
 }
 
 data.verify = {

@@ -143,4 +143,16 @@ D5z2A7KPYXUgUP0jd5yLZ7+pVBcFSUm5AZXJLXH4jPVOXztcmiu4ta0CAwEAAQ==
       assert.is_not_nil(err)
     end)
   end)
+
+  it("throws an error when failing to generate a signature", function()
+    local invalid_key = "a really invalid key"
+    local data = {
+      test = "test",
+    }
+    assert.has_error(function ()
+      local token, err = jwt.encode(data, {alg = "RS256", keys = { private = invalid_key }})
+      assert.is_nil(token)
+      assert.is_not_nil(err)
+    end)
+  end)
 end)
