@@ -38,7 +38,9 @@ local function header(options)
       sub = options.sub,
     }
   end
-  return {}
+  return {
+    alg = "none",
+  }
 end
 
 function data.encode(claims, options)

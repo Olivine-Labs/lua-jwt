@@ -19,8 +19,8 @@ describe("JWT spec", function()
       ["http://example.com/is_root"] = true
     }
     local token = jwt.encode(claim)
-    local token2 = jwt.encode(jwt.decode(plainJwt))
-    assert(token == token2)
+    assert.are.same(jwt.decode(token), claim)
+    assert.are.same(jwt.decode(plainJwt), claim)
   end)
 
   it("it can encode/decode a signed plain text token with alg=HS256", function()
