@@ -48,7 +48,7 @@ describe("JWT spec", function()
       empty={},
     }
     local keyPair = pkey.new{type = "rsa", bits=512}
-    local token, err = jwt.encode(claims, {alg = "RS256", keys = {private = keyPair}})
+    local token, _ = jwt.encode(claims, {alg = "RS256", keys = {private = keyPair}})
     local decodedClaims = jwt.decode(token, {keys = {public = keyPair}})
     assert.are.same(claims, decodedClaims)
   end)
