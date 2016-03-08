@@ -5,7 +5,7 @@ json.encode_empty_table('array')
 local data    = {}
 
 function data:encode(header, claims)
-  return basexx.to_url64(json.encode(claims))
+  return basexx.to_url64(json.encode(header)) .. "." .. basexx.to_url64(json.encode(claims))
 end
 
 function data:decode(header, str, options)
