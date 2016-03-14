@@ -20,12 +20,9 @@ data.sign = {
   ['HS384'] = function(data, key) return tohex(hmac.new(key, 'sha384'):final (data)) end,
   ['HS512'] = function(data, key) return tohex(hmac.new(key, 'sha512'):final (data)) end,
   ['RS256'] = function(data, key)
-    local mt = getmetatable(key)
-    if type(mt) == "string" and mt:match "^LuaCrypto" then
-      key = pkey.new (key:to_pem(true))
-    end
+    assert(type(key) == "string")
     local ok, result = pcall(function()
-      return key:sign(digest.new('sha256'):update(data))
+      return pkey.new(key):sign(digest.new('sha256'):update(data))
     end)
     if not ok then return nil, result end
     return result
@@ -37,17 +34,9 @@ data.verify = {
   ['HS384'] = function(data, signature, key) return signature == tohex(hmac.new (key, 'sha384'):final (data)) end,
   ['HS512'] = function(data, signature, key) return signature == tohex(hmac.new (key, 'sha512'):final (data)) end,
   ['RS256'] = function(data, signature, key)
-    local mt = getmetatable(key)
-    if type(mt) == "string" and mt:match "^LuaCrypto" then
-      key = pkey.new (key:to_pem())
-    end
+    assert(type(key) == "string")
     local ok, result = pcall(function()
-      local pubkey
-      if type(key) == 'string' then pubkey = pkey.new(key)
-      elseif type(key) == 'userdata' then pubkey = key
-      else assert (false)
-      end
-      return pubkey:verify(signature, digest.new('sha256'):update(data))
+      return pkey.new(key):verify(signature, digest.new('sha256'):update(data))
     end)
     if not ok then return nil, result end
     return result
