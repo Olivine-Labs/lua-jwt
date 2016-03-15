@@ -1,7 +1,8 @@
 describe("JWT spec", function()
 
-  local jwt = require 'jwt'
-  local crypto = require 'crypto'
+  local jwt  = require 'jwt'
+  local crypto = pcall (require, 'crypto') and require 'crypto'
+  local pkey = require 'openssl.pkey'
   local plainJwt = "eyJhbGciOiJub25lIn0.eyJpc3MiOiJqb2UiLA0KICJleHAiOjEzMDA4MTkzODAsDQogImh0dHA6Ly9leGFtcGxlLmNvbS9pc19yb290Ijp0cnVlfQ"
 
   it("can decode a plain text token", function()
@@ -46,21 +47,104 @@ describe("JWT spec", function()
       test = "test",
       empty={},
     }
-    local keyPair = crypto.pkey.generate("rsa", 512)
-    local token, err = jwt.encode(claims, {alg = "RS256", keys = {private = keyPair}})
-    local decodedClaims = jwt.decode(token, {keys = {public = keyPair}})
+    local keys = {
+      private =
+[[-----BEGIN RSA PRIVATE KEY-----
+MIIBOwIBAAJBANfnFz7xPmYVdJxZE7sQ5quh/XUzB5y/D5z2A7KPYXUgUP0jd5yL
+Z7+pVBcFSUm5AZXJLXH4jPVOXztcmiu4ta0CAwEAAQJBAJYXWNmw7Cgbkk1+v3C0
+dyeqHYF0UD5vtHLxs/BWLPI2lZO0e6ixFNI4uIuatBox1Zbzt1TSy8T09Slt4tNL
+CAECIQD6PHDGtKXcI2wUSvh4y8y7XfvwlwRPU2AzWZ1zvOCbbQIhANzgMpUNOZL2
+vakju4sal1yZeXUWO8FurmsAyotAx9tBAiB2oQKh4PAkXZKWSDhlI9CqHtMaaq17
+Yb5geaKARNGCPQIgILYrh5ufzT4xtJ0QJ3fWtuYb8NVMIEeuGTbSyHDdqIECIQDZ
+3LNCyR2ykwetc6KqbQh3W4VkuatAQgMv5pNdFLrfmg==
+-----END RSA PRIVATE KEY-----]],
+      public =
+[[-----BEGIN PUBLIC KEY-----
+MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBANfnFz7xPmYVdJxZE7sQ5quh/XUzB5y/
+D5z2A7KPYXUgUP0jd5yLZ7+pVBcFSUm5AZXJLXH4jPVOXztcmiu4ta0CAwEAAQ==
+-----END PUBLIC KEY-----]],
+    }
+    local token, _ = jwt.encode(claims, {alg = "RS256", keys = { private = keys.private }})
+    local decodedClaims = jwt.decode(token, {keys = { public = keys.public }})
     assert.are.same(claims, decodedClaims)
+  end)
+
+  if crypto then
+    it("it cannot encode/decode a signed plain text token with alg=RS256 (using luacrypto pkey)", function()
+      local claims = {
+        test = "test",
+        empty={},
+      }
+      local key = crypto.pkey.generate("rsa", 512)
+      local private_key =
+[[-----BEGIN RSA PRIVATE KEY-----
+MIIBOwIBAAJBANfnFz7xPmYVdJxZE7sQ5quh/XUzB5y/D5z2A7KPYXUgUP0jd5yL
+Z7+pVBcFSUm5AZXJLXH4jPVOXztcmiu4ta0CAwEAAQJBAJYXWNmw7Cgbkk1+v3C0
+dyeqHYF0UD5vtHLxs/BWLPI2lZO0e6ixFNI4uIuatBox1Zbzt1TSy8T09Slt4tNL
+CAECIQD6PHDGtKXcI2wUSvh4y8y7XfvwlwRPU2AzWZ1zvOCbbQIhANzgMpUNOZL2
+vakju4sal1yZeXUWO8FurmsAyotAx9tBAiB2oQKh4PAkXZKWSDhlI9CqHtMaaq17
+Yb5geaKARNGCPQIgILYrh5ufzT4xtJ0QJ3fWtuYb8NVMIEeuGTbSyHDdqIECIQDZ
+3LNCyR2ykwetc6KqbQh3W4VkuatAQgMv5pNdFLrfmg==
+-----END RSA PRIVATE KEY-----]]
+      local token, _ = jwt.encode(claims, {alg = "RS256", keys = { private = private_key }})
+      assert.has.error (function ()
+        jwt.encode(claims, {alg = "RS256", keys = {private = key}})
+      end)
+      assert.has.error (function ()
+        jwt.decode(token, {keys = {public = key}})
+      end)
+    end)
+  end
+
+  it("it cannot encode/decode a signed plain text token with alg=RS256 (using luaossl pkey)", function()
+    local claims = {
+      test = "test",
+      empty={},
+    }
+    local key = pkey.new{type = "rsa", bits=512}
+    local private_key =
+[[-----BEGIN RSA PRIVATE KEY-----
+MIIBOwIBAAJBANfnFz7xPmYVdJxZE7sQ5quh/XUzB5y/D5z2A7KPYXUgUP0jd5yL
+Z7+pVBcFSUm5AZXJLXH4jPVOXztcmiu4ta0CAwEAAQJBAJYXWNmw7Cgbkk1+v3C0
+dyeqHYF0UD5vtHLxs/BWLPI2lZO0e6ixFNI4uIuatBox1Zbzt1TSy8T09Slt4tNL
+CAECIQD6PHDGtKXcI2wUSvh4y8y7XfvwlwRPU2AzWZ1zvOCbbQIhANzgMpUNOZL2
+vakju4sal1yZeXUWO8FurmsAyotAx9tBAiB2oQKh4PAkXZKWSDhlI9CqHtMaaq17
+Yb5geaKARNGCPQIgILYrh5ufzT4xtJ0QJ3fWtuYb8NVMIEeuGTbSyHDdqIECIQDZ
+3LNCyR2ykwetc6KqbQh3W4VkuatAQgMv5pNdFLrfmg==
+-----END RSA PRIVATE KEY-----]]
+    local token, _ = jwt.encode(claims, {alg = "RS256", keys = { private = private_key }})
+    assert.has.error (function ()
+      jwt.encode(claims, {alg = "RS256", keys = {private = key}})
+    end)
+    assert.has.error (function ()
+      jwt.decode(token, {keys = {public = key}})
+    end)
   end)
 
   it("it cannot encode/decode a signed plain text token with alg=RS256 and an incorrect key", function()
     local claims = {
       test = "test",
     }
-    local keyPair = crypto.pkey.generate("rsa", 512)
-    local badPair = crypto.pkey.generate("rsa", 512)
-    local token = jwt.encode(claims, {alg = "RS256", keys = {private = keyPair}})
-    local decodedClaims = jwt.decode(token, {keys = {public = badPair}})
-    assert.has_error(function() assert.are.same(claims, decodedClaims) end)
+    local keys = {
+      private =
+[[-----BEGIN RSA PRIVATE KEY-----
+MIIBOwIBAAJBANfnFz7xPmYVdJxZE7sQ5quh/XUzB5y/D5z2A7KPYXUgUP0jd5yL
+Z7+pVBcFSUm5AZXJLXH4jPVOXztcmiu4ta0CAwEAAQJBAJYXWNmw7Cgbkk1+v3C0
+dyeqHYF0UD5vtHLxs/BWLPI2lZO0e6ixFNI4uIuatBox1Zbzt1TSy8T09Slt4tNL
+CAECIQD6PHDGtKXcI2wUSvh4y8y7XfvwlwRPU2AzWZ1zvOCbbQIhANzgMpUNOZL2
+vakju4sal1yZeXUWO8FurmsAyotAx9tBAiB2oQKh4PAkXZKWSDhlI9CqHtMaaq17
+Yb5geaKARNGCPQIgILYrh5ufzT4xtJ0QJ3fWtuYb8NVMIEeuGTbSyHDdqIECIQDZ
+3LNCyR2ykwetc6KqbQh3W4VkuatAQgMv5pNdFLrfmg==
+-----END RSA PRIVATE KEY-----]],
+      public =
+[[-----BEGIN PUBLIC KEY-----
+MQwwDQYJKoZIhvcNAQEBBQADSwAwSAJBANfnFz7xPmYVdJxZE7sQ5quh/XUzB5y/
+D5z2A7KPYXUgUP0jd5yLZ7+pVBcFSUm5AZXJLXH4jPVOXztcmiu4ta0CAwEAAQ==
+-----END PUBLIC KEY-----]],
+    }
+    local token = jwt.encode(claims, {alg = "RS256", keys = { private = keys.private }})
+    local decodedClaims = jwt.decode(token, {keys = { public = keys.public }})
+    assert.are_not.same(claims, decodedClaims)
   end)
 
   it("can verify a signature", function()
@@ -88,7 +172,7 @@ EQIDAQAB
 
   it("can encode and decode rs256", function()
     local keys = {
-      private = crypto.pkey.from_pem(
+      private =
 [[-----BEGIN RSA PRIVATE KEY-----
 MIIBOwIBAAJBANfnFz7xPmYVdJxZE7sQ5quh/XUzB5y/D5z2A7KPYXUgUP0jd5yL
 Z7+pVBcFSUm5AZXJLXH4jPVOXztcmiu4ta0CAwEAAQJBAJYXWNmw7Cgbkk1+v3C0
@@ -97,12 +181,12 @@ CAECIQD6PHDGtKXcI2wUSvh4y8y7XfvwlwRPU2AzWZ1zvOCbbQIhANzgMpUNOZL2
 vakju4sal1yZeXUWO8FurmsAyotAx9tBAiB2oQKh4PAkXZKWSDhlI9CqHtMaaq17
 Yb5geaKARNGCPQIgILYrh5ufzT4xtJ0QJ3fWtuYb8NVMIEeuGTbSyHDdqIECIQDZ
 3LNCyR2ykwetc6KqbQh3W4VkuatAQgMv5pNdFLrfmg==
------END RSA PRIVATE KEY-----]], true),
-      public = crypto.pkey.from_pem(
+-----END RSA PRIVATE KEY-----]],
+      public =
 [[-----BEGIN PUBLIC KEY-----
 MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBANfnFz7xPmYVdJxZE7sQ5quh/XUzB5y/
 D5z2A7KPYXUgUP0jd5yLZ7+pVBcFSUm5AZXJLXH4jPVOXztcmiu4ta0CAwEAAQ==
------END PUBLIC KEY-----]], false),
+-----END PUBLIC KEY-----]],
     }
     local claims = {
       test = "test",
@@ -112,5 +196,47 @@ D5z2A7KPYXUgUP0jd5yLZ7+pVBcFSUm5AZXJLXH4jPVOXztcmiu4ta0CAwEAAQ==
     local decodedClaims, err = jwt.decode(token, {keys = keys})
     if not decodedClaims then error(err) end
     assert.are.same(claims, decodedClaims)
+  end)
+
+    it("does not throw an error when key is invalid in rs256", function()
+    local keys = {
+      private =
+[[-----BEGIN RSA PRIVATE KEY-----
+MIIBOwIBAAJBANfnFz7xPmYVdJxZE7sQ5quh/XUzB5y/D5z2A7KPYXUgUP0jd5yL
+Z7+pVBcFSUm5AZXJLXH4jPVOXztcmiu4ta0CAwEAAQJBAJYXWNmw7Cgbkk1+v3C0
+dyeqHYF0UD5vtHLxs/BWLPI2lZO0e6ixFNI4uIuatBox1Zbzt1TSy8T09Slt4tNL
+CAECIQD6PHDGtKXcI2wUSvh4y8y7XfvwlwRPU2AzWZ1zvOCbbQIhANzgMpUNOZL2
+vakju4sal1yZeXUWO8FurmsAyotAx9tBAiB2oQKh4PAkXZKWSDhlI9CqHtMaaq17
+Yb5geaKARNGCPQIgILYrh5ufzT4xtJ0QJ3fWtuYb8NVMIEeuGTbSyHDdqIECIQDZ
+3LNCyR2ykwetc6KqbQh3W4VkuatAQgMv5pNdFLrfmg==
+-----END RSA PRIVATE KEY-----]],
+      public =
+[[-----BEGIN PUBLIC KEY-----
+MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBANfnFz7xPmYVdJxZE7sQ5quh/XUzB5y/
+D5z2A7KPYXUgUP0jd5yLZ7+pVBcFSUm5AZXJLXH4jPVOXztcmiu4ta0CAwEAAQ==
+-----END PUBLIC KEY-----]],
+    }
+    local invalid_key = "a really invalid key"
+    local data = {
+      test = "test",
+    }
+    local token = jwt.encode(data, {alg = "RS256", keys = keys})
+    assert.has.no.error(function ()
+      local result, err = jwt.decode(token, {keys = {public = invalid_key }})
+      assert.is_nil(result)
+      assert.is_not_nil(err)
+    end)
+  end)
+
+  it("throws an error when failing to generate a signature", function()
+    local invalid_key = "a really invalid key"
+    local data = {
+      test = "test",
+    }
+    assert.has_error(function ()
+      local token, err = jwt.encode(data, {alg = "RS256", keys = { private = invalid_key }})
+      assert.is_nil(token)
+      assert.is_not_nil(err)
+    end)
   end)
 end)
