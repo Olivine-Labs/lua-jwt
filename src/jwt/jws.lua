@@ -73,12 +73,26 @@ function data:decode(header, str, options)
 
   local message = basexx.from_url64(bodyStr)
   if signature then
-    if not self.verify[header.alg](rawHeader.."."..bodyStr, signature, options.keys.public) then
-      return nil, "Invalid token"
+    if not self.verify[header.alg](rawHeader.."."..bodyStr, string.lower(basexx.to_hex(signature)), options.keys.public) then
+      return nil, "Token Invalid"
     end
   end
 
-  return json.decode(message)
+  local decoded_message = json.decode(message)
+
+  if decoded_message.nbf ~= nil then
+    if math.floor(ngx.now()) < decoded_message.nbf then
+      return nil, "Token not yet valid"
+    end
+  end
+
+  if decoded_message.exp ~= nil then
+    if math.floor(ngx.now()) > decoded_message.exp then
+      return nil, "Token expired"
+    end
+  end
+
+  return decoded_message
 end
 
 return data
