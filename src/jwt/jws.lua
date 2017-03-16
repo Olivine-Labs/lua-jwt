@@ -1,9 +1,10 @@
 local basexx  = require 'basexx'
-local json    = require 'cjson'
-json.encode_empty_table('array')
-local digest  = require 'openssl.digest'
-local hmac    = require 'openssl.hmac'
-local pkey    = require 'openssl.pkey'
+local utils   = require 'jwt.utils'
+
+local pkey   = utils.pkey
+local json   = utils.json
+local HMAC   = utils.HMAC
+local DIGEST = utils.DIGEST
 
 local data    = {}
 
@@ -16,13 +17,13 @@ local function tohex(s)
 end
 
 data.sign = {
-  ['HS256'] = function(data, key) return tohex(hmac.new(key, 'sha256'):final (data)) end,
-  ['HS384'] = function(data, key) return tohex(hmac.new(key, 'sha384'):final (data)) end,
-  ['HS512'] = function(data, key) return tohex(hmac.new(key, 'sha512'):final (data)) end,
+  ['HS256'] = function(data, key) return HMAC.SHA256(key, data, true) end,
+  ['HS384'] = function(data, key) return HMAC.SHA384(key, data, true) end,
+  ['HS512'] = function(data, key) return HMAC.SHA512(key, data, true) end,
   ['RS256'] = function(data, key)
     assert(type(key) == "string")
     local ok, result = pcall(function()
-      return pkey.new(key):sign(digest.new('sha256'):update(data))
+      return pkey.sign('SHA256', key, data)
     end)
     if not ok then return nil, result end
     return result
@@ -30,13 +31,13 @@ data.sign = {
 }
 
 data.verify = {
-  ['HS256'] = function(data, signature, key) return signature == tohex(hmac.new (key, 'sha256'):final (data)) end,
-  ['HS384'] = function(data, signature, key) return signature == tohex(hmac.new (key, 'sha384'):final (data)) end,
-  ['HS512'] = function(data, signature, key) return signature == tohex(hmac.new (key, 'sha512'):final (data)) end,
+  ['HS256'] = function(data, signature, key) return signature == HMAC.SHA256(key, data, true) end,
+  ['HS384'] = function(data, signature, key) return signature == HMAC.SHA384(key, data, true) end,
+  ['HS512'] = function(data, signature, key) return signature == HMAC.SHA512(key, data, true) end,
   ['RS256'] = function(data, signature, key)
     assert(type(key) == "string")
     local ok, result = pcall(function()
-      return pkey.new(key):verify(signature, digest.new('sha256'):update(data))
+      return pkey.verify('SHA256', key, signature, data)
     end)
     if not ok then return nil, result end
     return result
@@ -53,12 +54,12 @@ function data:encode(header, claims, options)
 end
 
 function data:decode(header, str, options)
-  local dotFirst = str:find("%.")
+  local dotFirst = str:find(".", nil, true)
   local signature
   local bodyStr
   local rawHeader = str:sub(1, dotFirst-1)
   local str = str:sub(dotFirst+1)
-  local dotSecond = str:find("%.")
+  local dotSecond = str:find(".", nil, true)
   if dotSecond then
     bodyStr       = str:sub(1, dotSecond-1)
     if options and options.keys and options.keys.public then
