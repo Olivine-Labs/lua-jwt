@@ -25,5 +25,6 @@ build = {
     ["jwt.jws"]   = "src/jwt/jws.lua",
     ["jwt.jwe"]   = "src/jwt/jwe.lua",
     ["jwt.plain"] = "src/jwt/plain.lua",
+    ["jwt.utils"] = "src/jwt/utils.lua",
   }
 }

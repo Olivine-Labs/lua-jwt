@@ -1,6 +1,5 @@
 local basexx  = require 'basexx'
-local json    = require 'cjson'
-json.encode_empty_table('array')
+local json    = require 'jwt.utils'.json
 
 local data    = {}
 

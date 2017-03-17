@@ -2,7 +2,7 @@ describe("JWT spec", function()
 
   local jwt  = require 'jwt'
   local crypto = pcall (require, 'crypto') and require 'crypto'
-  local pkey = require 'openssl.pkey'
+  local pkey = require 'jwt.utils'.pkey
   local plainJwt = "eyJhbGciOiJub25lIn0.eyJpc3MiOiJqb2UiLA0KICJleHAiOjEzMDA4MTkzODAsDQogImh0dHA6Ly9leGFtcGxlLmNvbS9pc19yb290Ijp0cnVlfQ"
 
   it("can decode a plain text token", function()
@@ -65,7 +65,8 @@ D5z2A7KPYXUgUP0jd5yLZ7+pVBcFSUm5AZXJLXH4jPVOXztcmiu4ta0CAwEAAQ==
 -----END PUBLIC KEY-----]],
     }
     local token, _ = jwt.encode(claims, {alg = "RS256", keys = { private = keys.private }})
-    local decodedClaims = jwt.decode(token, {keys = { public = keys.public }})
+    local decodedClaims, err = jwt.decode(token, {keys = { public = keys.public }})
+    assert.table(decodedClaims, err)
     assert.are.same(claims, decodedClaims)
   end)
 
@@ -159,8 +160,8 @@ GxG1KwES6v5+PeLzlJDIDRcI8pl49fJYoXyasF8pskS63o9q8ibQspk+nzL9lD4E
 EQIDAQAB
 -----END PUBLIC KEY-----]]
 
-    local claims = jwt.decode(token, {keys={public=key}})
-    assert(claims)
+    local claims, err = jwt.decode(token, {keys={public=key}})
+    assert(claims, err)
   end)
 
   it("Is not fooled by modified tokens that claim to be unsigned", function()
