@@ -8,7 +8,7 @@ local json = prequire "cjson"
 if json and json.encode_empty_table then
   json.encode_empty_table('array')
 else
-  json   = require "dkjson"
+  json = require "dkjson"
 end
 
 local HMAC, DIGEST
