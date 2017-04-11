@@ -6,6 +6,8 @@ local json   = utils.json
 local HMAC   = utils.HMAC
 local DIGEST = utils.DIGEST
 
+local ENCODE_AS_HEX = false
+
 local data    = {}
 
 local function tohex(s)
@@ -17,9 +19,9 @@ local function tohex(s)
 end
 
 data.sign = {
-  ['HS256'] = function(data, key) return HMAC.SHA256(key, data, true) end,
-  ['HS384'] = function(data, key) return HMAC.SHA384(key, data, true) end,
-  ['HS512'] = function(data, key) return HMAC.SHA512(key, data, true) end,
+  ['HS256'] = function(data, key) return HMAC.SHA256(key, data, ENCODE_AS_HEX) end,
+  ['HS384'] = function(data, key) return HMAC.SHA384(key, data, ENCODE_AS_HEX) end,
+  ['HS512'] = function(data, key) return HMAC.SHA512(key, data, ENCODE_AS_HEX) end,
   ['RS256'] = function(data, key)
     assert(type(key) == "string")
     local ok, result = pcall(function()
@@ -31,9 +33,9 @@ data.sign = {
 }
 
 data.verify = {
-  ['HS256'] = function(data, signature, key) return signature == HMAC.SHA256(key, data, true) end,
-  ['HS384'] = function(data, signature, key) return signature == HMAC.SHA384(key, data, true) end,
-  ['HS512'] = function(data, signature, key) return signature == HMAC.SHA512(key, data, true) end,
+  ['HS256'] = function(data, signature, key) return signature == HMAC.SHA256(key, data, ENCODE_AS_HEX) end,
+  ['HS384'] = function(data, signature, key) return signature == HMAC.SHA384(key, data, ENCODE_AS_HEX) end,
+  ['HS512'] = function(data, signature, key) return signature == HMAC.SHA512(key, data, ENCODE_AS_HEX) end,
   ['RS256'] = function(data, signature, key)
     assert(type(key) == "string")
     local ok, result = pcall(function()
