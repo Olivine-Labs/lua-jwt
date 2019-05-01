@@ -47,17 +47,17 @@ if prequire "openssl.digest" then -- luaossl
 
   DIGEST = {
     SHA256 = function(data, hex)
-      local s = digest.new(key, 'sha256'):update (data)
+      local s = digest.new('sha256'):update (data)
       if hex then s = tohex(s) end
       return s
     end;
     SHA384 = function(data, hex)
-      local s = digest.new(key, 'sha384'):update (data)
+      local s = digest.new('sha384'):update (data)
       if hex then s = tohex(s) end
       return s
     end;
     SHA512 = function(data, hex)
-      local s = digest.new(key, 'sha512'):update (data)
+      local s = digest.new('sha512'):update (data)
       if hex then s = tohex(s) end
       return s
     end;
